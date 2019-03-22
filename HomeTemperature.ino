@@ -71,7 +71,7 @@ void head() {
 
 void body(){
   display.setTextColor(WHITE);
-  display.drawBitmap(1, 10, myBitmap, 11, 11, WHITE);
+  display.drawBitmap(1, 10, sun, 11, 11, WHITE);
   display.setCursor(15, 12);
   display.println("De go' vejr");
 }
