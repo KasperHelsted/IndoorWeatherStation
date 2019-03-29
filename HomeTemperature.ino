@@ -2,19 +2,24 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <ESP8266WiFi.h>
+#include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
 
 #include "settings.h"
 
 #include "figures.h"
 
-Adafruit_SSD1306 display(128, 32, &Wire, OLED_RESET);
+Adafruit_SSD1306 display(1);
 
 DHT dht(DHTPIN, DHTTYPE);
+
+HTTPClient http;
+StaticJsonDocument<200> doc;
 
 void setup()   {
   Serial.begin(115200);
 
-  display.begin();
+  display.begin(SSD1306_SWITCHCAPVCC, OLED_Address);
   display.setTextWrap(false);
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -52,7 +57,7 @@ void loop() {
 
 void head() {
   display.setTextColor(BLACK);
-  display.fillRect(0, 0, 128, 9, WHITE);
+  display.fillRect(0, 0, SCREEN_WIDTH, 9, WHITE);
 
   long wifiStrength = WiFi.RSSI();
 
@@ -69,28 +74,42 @@ void head() {
   display.println(SSID);
 }
 
+int i = 0;
+
 void body(){
-  display.setTextColor(WHITE);
-  display.drawBitmap(1, 10, sun, 11, 11, WHITE);
-  display.setCursor(15, 12);
-  display.println("De go' vejr");
+  http.begin("http://"+String(STATION)+"/");
+  int httpCode = http.GET();
+
+  if (httpCode > 0) {
+    deserializeJson(doc, http.getString());
+    
+    String temperature = doc["temp"];
+    int weather = doc["weather"];
+
+    display.setTextColor(WHITE);
+    display.drawBitmap(1, 10, getIcon(i % 76), 11, 11, WHITE);
+    i++;
+    display.setCursor(15, 12);
+    display.println("De er " + temperature + " C");
+  }
 }
 
 void footer() {
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature(!CELSIUS);
-  char test[] = (CELSIUS) ? "C" : "F";
+  String denominator = (CELSIUS) ? "C" : "F";
 
   display.setTextColor(BLACK);
-  display.fillRect(0, 23, 128, 9, WHITE);
+  display.fillRect(0, SCREEN_HEIGHT-9, SCREEN_WIDTH, 9, WHITE);
 
-  display.setCursor(1, 24);
+  display.setCursor(1, SCREEN_HEIGHT-8);
   display.print("Indoor: ");
+
   if (isnan(humidity) || isnan(temperature)) {
     display.println("Offline");
   }else{
     display.print(temperature, 1);
-    display.print(" "+String(test)+" / ");
+    display.print(" " + denominator + " / ");
     display.print(humidity, 0);
     display.println(" %");
   }

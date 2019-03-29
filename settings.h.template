@@ -1,22 +1,17 @@
 // WiFi
-#define SSID "SSID"
-#define PASSWORD "PASSWORD"
+#define SSID "WIFI-SSID"
+#define PASSWORD "WIFI-PASSWORD"
 
 // Live Temperature
 #define CELSIUS true
 
-// Weather
-#define APIKEY "API_KEY"
-#define LAT 51.510357
-#define LON -0.116773
-#define UPDATE 60 //Minutes
-
 // Station
-#define STATION true
-#define MDNS "not working yet"
+#define STATION "IP OF HOME STATION"
 
 // OLED Settings
-#define OLED_RESET 0
+#define OLED_ADDRESS 0x3C
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
 
 // DHT Settings
 #define DHTPIN D3
