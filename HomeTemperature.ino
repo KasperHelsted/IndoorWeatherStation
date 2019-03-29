@@ -19,7 +19,7 @@ StaticJsonDocument<200> doc;
 void setup()   {
   Serial.begin(115200);
 
-  display.begin(SSD1306_SWITCHCAPVCC, OLED_Address);
+  display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS);
   display.setTextWrap(false);
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -87,7 +87,7 @@ void body(){
     int weather = doc["weather"];
 
     display.setTextColor(WHITE);
-    display.drawBitmap(1, 10, getIcon(i % 76), 11, 11, WHITE);
+    display.drawBitmap(1, 10, getIcon(i % 76), ICON_HEIGHT, ICON_WIDTH, WHITE);
     i++;
     display.setCursor(15, 12);
     display.println("De er " + temperature + " C");
@@ -100,9 +100,9 @@ void footer() {
   String denominator = (CELSIUS) ? "C" : "F";
 
   display.setTextColor(BLACK);
-  display.fillRect(0, SCREEN_HEIGHT-9, SCREEN_WIDTH, 9, WHITE);
+  display.fillRect(0, SCREEN_HEIGHT - 9, SCREEN_WIDTH, 9, WHITE);
 
-  display.setCursor(1, SCREEN_HEIGHT-8);
+  display.setCursor(1, SCREEN_HEIGHT - 8);
   display.print("Indoor: ");
 
   if (isnan(humidity) || isnan(temperature)) {
