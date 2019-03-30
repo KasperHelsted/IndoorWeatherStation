@@ -1,4 +1,4 @@
-#include "DHT.h"
+#include <DHT.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <ESP8266WiFi.h>
@@ -8,6 +8,7 @@
 #include "settings.h"
 
 #include "figures.h"
+#include "images.h"
 
 Adafruit_SSD1306 display(1);
 
@@ -18,29 +19,19 @@ StaticJsonDocument<200> doc;
 
 void setup()   {
   Serial.begin(115200);
+  while (!Serial){}
 
   display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS);
   display.setTextWrap(false);
   display.setTextSize(1);
   display.setTextColor(WHITE);
 
+  loading();
+
   //Initialize to wifi
   WiFi.begin(SSID, PASSWORD);
-
-  //Connect to wifi
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");  
-
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
   
   dht.begin();
-
 }
 
 void loop() {
@@ -53,6 +44,26 @@ void loop() {
   display.display();
   //delay(10000);
   delay(500);
+}
+
+void loading(){
+  display.clearDisplay();
+
+  display.drawBitmap(4, 14, WiFi_Logo, WIFI_WIDTH, WIFI_HEIGHT, WHITE);
+
+  display.setCursor(4 + WIFI_WIDTH + 2, 10);
+  display.println("Connecting");
+  display.setCursor(4 + WIFI_WIDTH + 2, 18);
+  display.println("to WiFi");
+
+  display.display();
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    display.print(".");
+    display.display();
+  }
+
+  delay(2000);
 }
 
 void head() {
@@ -74,8 +85,6 @@ void head() {
   display.println(SSID);
 }
 
-int i = 0;
-
 void body(){
   http.begin("http://"+String(STATION)+"/");
   int httpCode = http.GET();
@@ -83,14 +92,32 @@ void body(){
   if (httpCode > 0) {
     deserializeJson(doc, http.getString());
     
-    String temperature = doc["temp"];
-    int weather = doc["weather"];
+    String city = doc["city"];
+    String description = doc["description"];
+    String weather = doc["weather"];
+
+    float temperature = doc["temp"];
+    float humidity = doc["humidity"];
+
+
+    Serial.print("weather: ");
+    Serial.println(weather);
 
     display.setTextColor(WHITE);
-    display.drawBitmap(1, 10, getIcon(i % 76), ICON_HEIGHT, ICON_WIDTH, WHITE);
-    i++;
-    display.setCursor(15, 12);
-    display.println("De er " + temperature + " C");
+    display.drawBitmap(0, 9, getIcon(weather), ICON_WIDTH, ICON_HEIGHT, WHITE);
+
+    display.setCursor(ICON_WIDTH + 1, 12);
+    display.println(city);
+    display.setCursor(ICON_WIDTH + 1, 21);
+    display.println(description);
+    display.setCursor(ICON_WIDTH + 1, 30);
+    display.print(temperature, 1);
+    display.print(" C / ");
+    display.print(humidity, 0);
+    display.println(" %");
+
+
+    doc.clear();
   }
 }
 
