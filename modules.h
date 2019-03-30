@@ -14,3 +14,13 @@ DHT dht(DHTPIN, DHTTYPE);
 // Different clients for handleing the HTTP calls
 HTTPClient http;
 StaticJsonDocument<200> doc;
+
+
+
+
+
+void renderWiFiStrength(int x, int y, int color=WHITE) {
+    int wifiStrength = WiFi.RSSI();
+
+    // Bottom Line
+}

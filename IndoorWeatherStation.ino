@@ -50,13 +50,61 @@ void loadingScreen() {
   display.drawBitmap(4, 14, WiFi_Logo, WIFI_WIDTH, WIFI_HEIGHT, WHITE);
 }
 
+
+int screen = 0;
 void loop() {
+  switch(screen){
+    case 0:
+      renderCurrentTime();
+      break;
+    case 1:
+      renderIndoorTemperature();
+      break;
+    case 2:
+      renderOutsideTemperature();
+      break;
+    case 3:
+      renderOutsideForecast();
+      break;
+    default:
+      renderError();
+      break;
+  }
+  screen = (screen + 1) % 4;
 
   footer();
   display.display();
   delay(250);
 }
 
-void footer() {
+void renderCurrentTime(){
+  // Current Time()
+}
 
+void renderIndoorTemperature(){
+  // temperature
+  // humidity
+}
+
+void renderOutsideTemperature(){
+  // Weather icon
+  // Weather description
+  // Temperature
+}
+
+void renderOutsideForecast(){
+  // 3 day forecast
+  // Weather icon
+  // From Temperature
+  // To Temperature
+}
+
+void renderError(){
+  // Error
+  // Error message
+}
+
+void footer() {
+  // time - indoor temp - wifi strength
+  renderWiFiStrength(1, 1);
 }
