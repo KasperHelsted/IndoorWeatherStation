@@ -19,6 +19,7 @@ void initDisplay() {
   display.setTextWrap(false);
   display.setTextSize(1);
   display.setTextColor(WHITE);
+  display.clearDisplay();
 }
 
 bool connectedToWifi(){
@@ -31,23 +32,37 @@ void initModules(){
   // Wait for wifi to connect
   while (!connectedToWifi()) {
     loadingScreen();
-    // TODO: Write Connecting to WiFi... 
+  
+    display.setCursor(70, 39);
+    display.print("Connecting to");
+    display.setCursor(70, 48);
+    display.print("WiFi");
+
     display.display();
-    delay(500);
+    delay(2000);
   }
-  IPAddress ip = WiFi.localIP();
-  Serial.println(ip);
 
   //Initialize DHT module
   dht.begin();
   loadingScreen();
-  // TODO: Write Starting temperature sensor
+
+  display.setCursor(70, 39);
+  display.print("Starting");
+  display.setCursor(70, 48);
+  display.print("DHT Sensor");
+
   display.display();
+  delay(2000);
 }
 
 void loadingScreen() {
   display.clearDisplay();
   display.drawBitmap(4, 14, WiFi_Logo, WIFI_WIDTH, WIFI_HEIGHT, WHITE);
+
+  display.setCursor(70, 21);
+  display.print("Made By:");
+  display.setCursor(70, 30);
+  display.print("Hellsted");
 }
 
 
@@ -73,11 +88,8 @@ void loop() {
       break;
   }
 
-  int executionTime = footer();
+  footer();
   display.display();
-  
-  if(executionTime < 100)
-    delay(100 - executionTime);
 }
 
 void renderCurrentTime(){
@@ -116,10 +128,10 @@ void renderError(){
 }
 
 int loadingWidth = 0;
-int changeTime = 5000;
+int changeTime = 2500;
 long execTime = 0;
 
-int footer() {
+void footer() {
   // time - indoor temp - wifi strength
   int diff = (millis() - execTime);
   execTime = millis();
@@ -136,9 +148,7 @@ int footer() {
   display.drawLine(0, 64 - 9, 128, 64 - 9, WHITE);
   
   display.setCursor(1, 64 - 7);
-  display.print("16:47");
+  display.print("16:47:01");
 
   renderWiFiStrength(128 - 5, 64 - 6);
-
-  return diff;
 }
