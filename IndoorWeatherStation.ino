@@ -1,4 +1,3 @@
-#include <Adafruit_GFX.h>
 #include <ESP8266WiFi.h>
 
 #include "modules.h"
@@ -37,7 +36,6 @@ void initModules(){
     delay(500);
   }
 
-
   //Initialize DHT module
   dht.begin();
   loadingScreen();
@@ -53,6 +51,8 @@ void loadingScreen() {
 
 int screen = 0;
 void loop() {
+  display.clearDisplay();
+
   switch(screen){
     case 0:
       renderCurrentTime();
@@ -70,26 +70,31 @@ void loop() {
       renderError();
       break;
   }
-  screen = (screen + 1) % 4;
 
   footer();
   display.display();
-  delay(250);
+  delay(100);
 }
 
 void renderCurrentTime(){
   // Current Time()
+  display.setCursor(1, 1);
+  display.print("Current Time()");
 }
 
 void renderIndoorTemperature(){
   // temperature
   // humidity
+  display.setCursor(1, 1);
+  display.print("temperature, humidity");
 }
 
 void renderOutsideTemperature(){
   // Weather icon
   // Weather description
   // Temperature
+  display.setCursor(1, 1);
+  display.print("Weather icon & Stuff");
 }
 
 void renderOutsideForecast(){
@@ -97,6 +102,8 @@ void renderOutsideForecast(){
   // Weather icon
   // From Temperature
   // To Temperature
+  display.setCursor(1, 1);
+  display.print("3 day forecast");
 }
 
 void renderError(){
@@ -104,7 +111,29 @@ void renderError(){
   // Error message
 }
 
+int loadingWidth = 0;
+int changeTime = 5000;
+long execTime = 0;
+
 void footer() {
   // time - indoor temp - wifi strength
-  renderWiFiStrength(1, 1);
+  int diff = (millis() - execTime);
+  execTime = millis();
+
+  display.drawLine(0, 64 - 10, loadingWidth, 64 - 10, WHITE);
+
+  if(loadingWidth > 128) {
+    screen = (screen + 1) % 4;
+    loadingWidth = 0;
+  }else {
+    loadingWidth = (loadingWidth + (int)((diff/(float)changeTime)*128));
+  }
+
+  display.drawLine(0, 64 - 9, 128, 64 - 9, WHITE);
+  
+  display.setCursor(1, 64 - 7);
+  display.print("16:47");
+
+
+  // renderWiFiStrength(1, 1);
 }
