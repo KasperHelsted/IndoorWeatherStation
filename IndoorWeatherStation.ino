@@ -35,6 +35,8 @@ void initModules(){
     display.display();
     delay(500);
   }
+  IPAddress ip = WiFi.localIP();
+  Serial.println(ip);
 
   //Initialize DHT module
   dht.begin();
@@ -71,9 +73,11 @@ void loop() {
       break;
   }
 
-  footer();
+  int executionTime = footer();
   display.display();
-  delay(100);
+  
+  if(executionTime < 100)
+    delay(100 - executionTime);
 }
 
 void renderCurrentTime(){
@@ -115,7 +119,7 @@ int loadingWidth = 0;
 int changeTime = 5000;
 long execTime = 0;
 
-void footer() {
+int footer() {
   // time - indoor temp - wifi strength
   int diff = (millis() - execTime);
   execTime = millis();
@@ -134,6 +138,7 @@ void footer() {
   display.setCursor(1, 64 - 7);
   display.print("16:47");
 
+  renderWiFiStrength(128 - 5, 64 - 6);
 
-  // renderWiFiStrength(1, 1);
+  return diff;
 }

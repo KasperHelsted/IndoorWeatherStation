@@ -15,12 +15,25 @@ DHT dht(DHTPIN, DHTTYPE);
 HTTPClient http;
 StaticJsonDocument<200> doc;
 
-
-
-
-
 void renderWiFiStrength(int x, int y, int color=WHITE) {
     int wifiStrength = WiFi.RSSI();
 
+    // 1: Bad connection
+    if (wifiStrength > -80)
+      display.drawLine(x, y + 3, x, y + 3, WHITE);
+
+    // 2: Okay connection
+    if (wifiStrength > -70)
+      display.drawLine(x + 1, y + 3, x + 1, y + 2, WHITE);
+
+    // 3: Good connection
+    if (wifiStrength > -67)
+      display.drawLine(x + 2, y + 3, x + 2, y + 1, WHITE);
+
+    // 4: Great connection
+    if (wifiStrength > -30)
+      display.drawLine(x + 3, y + 3, x + 3, y, WHITE);
+  
     // Bottom Line
+    display.drawLine(x, y + 4, x + 3, y + 4, WHITE);
 }
