@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#include <TimeLib.h>
 
 #include "modules.h"
 
@@ -9,6 +10,8 @@ void setup() {
   // Init serial and wait for serial to be ready.
   Serial.begin(115200);
   while (!Serial){}
+
+  setTime(1554190806);
 
   initDisplay();
   initModules();
@@ -67,7 +70,12 @@ void loadingScreen() {
 
 
 int screen = 0;
+long execTime = -1;
+
 void loop() {
+  updateTemperature();
+  if(execTime == -1)
+    execTime = millis();
   display.clearDisplay();
 
   switch(screen){
@@ -127,9 +135,25 @@ void renderError(){
   // Error message
 }
 
+float humidity = 0;
+float temperature = 9.0;
+const String denominator = (CELSIUS) ? "C" : "F";
+
+void updateTemperature(){
+  float readHumidity = dht.readHumidity();
+  float readTemperature = dht.readTemperature(!CELSIUS);
+
+  if (isnan(readHumidity) || isnan(readTemperature)) {
+    return;
+  }else{
+    humidity = readHumidity;
+    temperature = readTemperature;
+  }
+}
+
+
 int loadingWidth = 0;
 int changeTime = 2500;
-long execTime = 0;
 
 void footer() {
   // time - indoor temp - wifi strength
@@ -148,7 +172,16 @@ void footer() {
   display.drawLine(0, 64 - 9, 128, 64 - 9, WHITE);
   
   display.setCursor(1, 64 - 7);
-  display.print("16:47:01");
+  display.printf("%02d", hour());
+  display.print(":");
+  display.printf("%02d", minute());
+
+  int baseOffset = 40;
+  // offset might need to be 0, 7, 14 depeding on space between chars
+  int offset = baseOffset + ((temperature > 100) ? 10 : (temperature > 10) ? 5 : 0);
+  display.setCursor(128 - offset, 64 - 7);
+  display.print(temperature, 1);
+  display.print(" " + denominator);
 
   renderWiFiStrength(128 - 5, 64 - 6);
 }
