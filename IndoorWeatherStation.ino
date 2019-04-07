@@ -2,17 +2,39 @@
 #include <TimeLib.h>
 
 #include "modules.h"
+#include "TestEEPROM.h"
 
 #include "figures.h"
 #include "images.h"
+
+/////////////////////////////////
+/////        SSD1306        /////
+/////        SCL: D1        /////
+/////        SDA: D2        /////
+/////                       /////
+/////         DHT22         /////
+/////        DATA: D3       /////
+/////////////////////////////////
 
 void setup() {
   // Init serial and wait for serial to be ready.
   Serial.begin(115200);
   while (!Serial){}
 
+  // Set system info
   setTime(1554190806);
+  EEPROM.begin(512);
+  http.setTimeout(1000);
 
+  if(!read_String(9)){
+    Serial.println("UNABLE TO READ STRING!!!");
+    writeString(random_String());
+  }else{
+    Serial.print("FOUND ID: ");
+    Serial.println(EEPString);
+  }
+  
+  // Init modules
   initDisplay();
   initModules();
 }
@@ -73,7 +95,9 @@ int screen = 0;
 long execTime = -1;
 
 void loop() {
+  fetchData();
   updateTemperature();
+
   if(execTime == -1)
     execTime = millis();
   display.clearDisplay();
@@ -98,12 +122,40 @@ void loop() {
 
   footer();
   display.display();
+  Serial.flush();
+}
+
+float humidity = 0;
+float temperature = 9.0;
+const String denominator = (CELSIUS) ? "C" : "F";
+
+void updateTemperature(){
+  //TODO: Read interval, so dont read at EVERY iteration
+  float readHumidity = dht.readHumidity();
+  float readTemperature = dht.readTemperature(!CELSIUS);
+
+  if (isnan(readHumidity) || isnan(readTemperature)) {
+    return;
+  }else{
+    humidity = readHumidity;
+    temperature = readTemperature;
+  }
 }
 
 void renderCurrentTime(){
   // Current Time()
   display.setCursor(1, 1);
-  display.print("Current Time()");
+  display.setTextSize(2);
+
+  display.printf("%02d", hour());
+  display.print(":");
+  display.printf("%02d", minute());
+  display.print(":");
+  display.printf("%02d", second());
+
+  
+  display.setTextSize(1);
+  // display.print("Current Time()");
 }
 
 void renderIndoorTemperature(){
@@ -135,26 +187,8 @@ void renderError(){
   // Error message
 }
 
-float humidity = 0;
-float temperature = 9.0;
-const String denominator = (CELSIUS) ? "C" : "F";
-
-void updateTemperature(){
-  float readHumidity = dht.readHumidity();
-  float readTemperature = dht.readTemperature(!CELSIUS);
-
-  if (isnan(readHumidity) || isnan(readTemperature)) {
-    return;
-  }else{
-    humidity = readHumidity;
-    temperature = readTemperature;
-  }
-}
-
-
 int loadingWidth = 0;
-int changeTime = 2500;
-
+int changeTime = 5000;
 void footer() {
   // time - indoor temp - wifi strength
   int diff = (millis() - execTime);

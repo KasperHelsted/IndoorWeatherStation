@@ -37,3 +37,18 @@ void renderWiFiStrength(int x, int y, int color=WHITE) {
     // Bottom Line
     display.drawLine(x, y + 4, x + 3, y + 4, WHITE);
 }
+
+long lastUpdateTime = 0;
+void fetchData(){
+  if(lastUpdateTime < millis()){
+    doc.clear();
+    http.begin("http://"+String(STATION)+"/");
+    int lastCode = http.GET();
+  
+    if (lastCode > 0) {
+      deserializeJson(doc, http.getString());
+    }
+    http.end();
+    lastUpdateTime = millis() + 5000;
+  }
+}
