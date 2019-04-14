@@ -2,7 +2,8 @@
 #include <TimeLib.h>
 
 #include "modules.h"
-#include "TestEEPROM.h"
+#include "font.h"
+#include "LoadUniqueID.h"
 
 #include "figures.h"
 #include "images.h"
@@ -22,21 +23,52 @@ void setup() {
   while (!Serial){}
 
   // Set system info
-  setTime(1554190806);
-  EEPROM.begin(512);
   http.setTimeout(1000);
 
-  if(!read_String(9)){
-    Serial.println("UNABLE TO READ STRING!!!");
-    writeString(random_String());
-  }else{
-    Serial.print("FOUND ID: ");
-    Serial.println(EEPString);
-  }
+  // Load Unique ID of the device
+  loadUniqueID();
   
   // Init modules
   initDisplay();
   initModules();
+
+  // Do stuff plz.
+  registerAtBase();
+}
+
+void registerAtBase() {
+  bool connected = false;
+  String postData = "ID=" + EEPString;
+
+  while(!connected){
+    doc.clear();
+    http.begin("http://"+String(STATION)+"/register");
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    int lastCode = http.POST(postData);
+  
+    if (lastCode == 200) {
+      connected = true;
+    }else{
+      waitForConnection();
+      Serial.println("COULD NOT CONNECT TO BASE");
+      delay(2500);
+    }
+    http.end();
+  }
+}
+
+void waitForConnection(){
+  display.clearDisplay();
+
+  display.setCursor(15, 20);
+  display.print("Not registered");
+  display.setCursor(25, 29);
+  display.print("on network");
+  display.setCursor(5, 38);
+  display.print("Device ID: " + EEPString);
+  
+  
+  display.display();
 }
 
 void initDisplay() {
@@ -126,19 +158,23 @@ void loop() {
 }
 
 float humidity = 0;
-float temperature = 9.0;
-const String denominator = (CELSIUS) ? "C" : "F";
-
+float temperature = 0;
+const String denominator = (CELSIUS) ? "°C" : "F";
+long lastTemperature = 0;
 void updateTemperature(){
-  //TODO: Read interval, so dont read at EVERY iteration
-  float readHumidity = dht.readHumidity();
-  float readTemperature = dht.readTemperature(!CELSIUS);
-
-  if (isnan(readHumidity) || isnan(readTemperature)) {
-    return;
-  }else{
-    humidity = readHumidity;
-    temperature = readTemperature;
+  if(lastTemperature < millis()){
+    float readHumidity = dht.readHumidity();
+    float readTemperature = dht.readTemperature(!CELSIUS);
+    
+    if (isnan(readHumidity) || isnan(readTemperature)) {
+      humidity = -1;
+      temperature = -1;
+      return;
+    }else{
+      humidity = readHumidity;
+      temperature = readTemperature;
+    }
+    lastTemperature = millis() + 5000;
   }
 }
 
@@ -147,22 +183,35 @@ void renderCurrentTime(){
   display.setCursor(1, 1);
   display.setTextSize(2);
 
-  display.printf("%02d", hour());
+  display.setCursor(15, 20);
+  if(hour() < 10)
+    display.print(" ");
+  display.print(hour());
   display.print(":");
   display.printf("%02d", minute());
   display.print(":");
   display.printf("%02d", second());
 
-  
   display.setTextSize(1);
-  // display.print("Current Time()");
 }
 
 void renderIndoorTemperature(){
-  // temperature
-  // humidity
-  display.setCursor(1, 1);
-  display.print("temperature, humidity");
+  display.setTextSize(1);
+  display.setCursor(40, 0);
+  display.print("TEMPERATURE");
+  display.setTextSize(2);
+  display.setCursor(30, 9);
+  display.print(temperature, 2);
+  display.print(" " + denominator);
+
+  display.setTextSize(1);
+  display.setCursor(40, 27);
+  display.print("HUMIDITY");
+  display.setTextSize(2);
+  display.setCursor(30, 36);
+  display.print(" %");
+
+  display.setTextSize(1);
 }
 
 void renderOutsideTemperature(){

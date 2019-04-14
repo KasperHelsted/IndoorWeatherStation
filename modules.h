@@ -45,9 +45,12 @@ void fetchData(){
     http.begin("http://"+String(STATION)+"/");
     int lastCode = http.GET();
   
-    if (lastCode > 0) {
+    if (lastCode == 200) {
       deserializeJson(doc, http.getString());
+
+      setTime((int)doc["time"]);
     }
+
     http.end();
     lastUpdateTime = millis() + 5000;
   }
